@@ -97,7 +97,7 @@ Blynk.virtualWrite(V0, HIGH);
 Blynk.virtualWrite(V1, HIGH);
 Blynk.notify("BAHAYA!!! TERDETEKSI KEBOCORAN GAS");
 
-Blynk.email("XXXXXXXXX@gmail.com","BAHAYA!!!","TERD ETEKSI KEBOCORAN GAS DIRUMAH");
+Blynk.email("XXXXXXXXX@gmail.com","BAHAYA!!!","TERDETEKSI KEBOCORAN GAS DIRUMAH");
 Blynk.tweet("BAHAYA!!! TERDETEKSI KEBOCORAN GAS DIRUMAH");
 
 }
