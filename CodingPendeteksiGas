@@ -1,0 +1,111 @@
+#include <SoftwareSerial.h>
+#define BLYNK_PRINT Serial 
+#include <ESP8266WiFi.h>
+#include <BlynkSimpleEsp8266.h>
+
+String apiWritekey = "G1XXXXXXXXXXXX"; // replace with your THINGSPEAK WRITEAPI key here
+const char* ssid = "ArXXXXX"; // your wifi SSID name 
+const char* password = "vXXXXXXX" ;// wifi pasword
+
+const char* server = "api.thingspeak.com";
+float resolution=3.3/1023;// 3.3 is the supply volt & 1023 is max analog read value
+WiFiClient client;
+
+
+const int pinLpg = A0; 
+const int pinBuzzer = 5; 
+const int pinLed = 16; 
+int sensorGas;
+
+
+char auth[] = "wPc_XXXXXXXXXXX";///API Bylnk 
+void setup() {
+Serial.begin(115200); 
+WiFi.disconnect(); 
+delay(10);
+WiFi.begin(ssid, password);
+
+Serial.println(); 
+Serial.println();
+Serial.print("Connecting to ");
+Serial.println(ssid);
+
+WiFi.begin(ssid, password); 
+pinMode(pinLpg, INPUT);
+pinMode(pinBuzzer, OUTPUT);
+pinMode(pinLed, OUTPUT);
+
+Blynk.begin(auth, ssid, password);
+
+while (WiFi.status() != WL_CONNECTED) { 
+  delay(10);
+Serial.print(".");
+}
+Serial.println("");
+Serial.print("NodeMcu connected to wifi..."); 
+Serial.println(ssid);
+Serial.println();
+}
+
+void loop() {
+int sensorValue = analogRead(A0);
+
+if (client.connect(server,80))
+{
+String tsData = apiWritekey; 
+tsData +="&field1=";
+tsData += String(sensorValue); 
+tsData += "\r\n\r\n";
+
+client.print("POST /update HTTP/1.1\n");
+client.print("Host: api.thingspeak.com\n"); 
+client.print("Connection: close\n");
+client.print("X-THINGSPEAKAPIKEY: "+apiWritekey+"\n"); 
+client.print("Content-Type: application/x-www-form-urlencoded\n"); 
+client.print("Content-Length: ");
+client.print(tsData.length());
+client.print("\n\n"); // the 2 carriage returns indicate closing of Header fields & starting of data
+client.print(tsData);
+
+Serial.print("Temperature: "); 
+Serial.print(sensorValue);
+Serial.println("uploaded to Thingspeak server.  ");
+}
+client.stop();
+
+Serial.println("Waiting to upload next reading..."); 
+Serial.println();
+// thingspeak needs minimum 15 sec delay between updates delay(200);
+Serial.println(sensorValue);
+
+if (sensorValue <= 320){
+  digitalWrite(pinBuzzer, LOW); 
+  digitalWrite(pinLed, LOW); 
+  Blynk.virtualWrite(V0, LOW); 
+  Blynk.virtualWrite(V1, LOW);
+}
+else if (sensorValue > 350){ 
+  digitalWrite(pinBuzzer, HIGH); 
+  digitalWrite(pinLed, HIGH); 
+  delay(200); 
+  digitalWrite(pinLed, LOW); 
+  delay(200);
+
+digitalWrite(pinBuzzer, HIGH); 
+delay(200); 
+Blynk.virtualWrite(V0, HIGH); 
+Blynk.virtualWrite(V1, HIGH);
+Blynk.notify("BAHAYA!!! TERDETEKSI KEBOCORAN GAS");
+
+Blynk.email("vXXXXXXXX@gmail.com","BAHAYA!!!","TERD ETEKSI KEBOCORAN GAS DIRUMAH");
+Blynk.tweet("BAHAYA!!! TERDETEKSI KEBOCORAN GAS DIRUMAH");
+
+}
+delay(1000);
+
+Blynk.run();
+}
+
+ 
+
+ 
